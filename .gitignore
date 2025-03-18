@@ -1,0 +1,25 @@
+*/*/config.old
+*/*/rootfs_config.old
+build/
+
+# 可启动镜像
+images/linux/*
+images/linux/sdk.sh
+images/linux/rootfs.*
+
+!images/linux/BOOT.BIN
+!images/linux/boot.scr
+!images/linux/system.bit
+!images/linux/system.dtb
+!images/linux/zImage
+!images/linux/boot.cmd.default
+
+
+pre-built/linux/
+.petalinux/*
+!.petalinux/metadata
+*.o
+*.jou
+*.log
+/components/plnx_workspace
+/components/yocto
