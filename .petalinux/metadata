@@ -1,6 +1,6 @@
 PETALINUX_VER=2020.2
 VALIDATE_HW_CHKSUM=1
-HARDWARE_PATH=/home/huffer/projects/zynq-linux/zynq-drv-lab/system_wrapper.xsa
+HARDWARE_PATH=/home/huffer/projects/zynq-linux/resource/system_wrapper.xsa
 HARDWARE_CHECKSUM=bceb060bba4296b060edf117f6775f21
 YOCTO_SDK=5ff8fc5f85d1566b314bb73eaa378212
 RFSCONFIG_CHKSUM=7fb2a289957dc67ab720c7cb67e09ee0

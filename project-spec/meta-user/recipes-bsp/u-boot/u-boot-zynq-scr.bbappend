@@ -1,11 +1,12 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += "file://boot.cmd.default.initrd \
+    file://boot.cmd.default.user \
 	file://boot.cmd.default \
 	file://boot.cmd.default.ubifs"
 
 BOOTMODE = "default"
-BOOTFILE_EXT = ".initrd"
+BOOTFILE_EXT = ".user"
 #Make this value to "1" to skip appending base address to ddr offsets.
 SKIP_APPEND_BASEADDR = "0"
 
@@ -13,11 +14,11 @@ RAMDISK_IMAGE_zynq = "rootfs.cpio.gz.u-boot"
 RAMDISK_IMAGE_zynqmp = "rootfs.cpio.gz.u-boot"
 RAMDISK_IMAGE_versal = "rootfs.cpio.gz.u-boot"
 
-KERNEL_IMAGE_zynq = "uImage"
+KERNEL_IMAGE_zynq = "zImage"
 KERNEL_IMAGE_zynqmp = "Image"
 KERNEL_IMAGE_versal = "Image"
 
-KERNEL_BOOTCMD_zynq = "bootm"
+KERNEL_BOOTCMD_zynq = "bootz"
 KERNEL_BOOTCMD_zynqmp = "booti"
 KERNEL_BOOTCMD_versal = "booti"
 

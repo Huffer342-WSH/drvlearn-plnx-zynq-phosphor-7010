@@ -1,0 +1,107 @@
+# This is a boot script for U-Boot
+# Generate boot.scr:
+# mkimage -c none -A arm -T script -d boot.cmd.default boot.scr
+#
+################
+@@PRE_BOOTENV@@
+
+for boot_target in ${boot_targets}; do
+    if test "${boot_target}" = "mmc0" || test "${boot_target}" = "mmc1" ; then
+		echo "INFO: 尝试从${devtype} ${devnum}:${distro_bootpart}加载内核、设备树、比特流";
+        # 初始化标志变量
+        setenv found_kernel 0;
+        setenv found_dtb 0;
+        setenv found_bit 0;
+        
+        # 尝试加载内核镜像
+        if test -e ${devtype} ${devnum}:${distro_bootpart} /@@KERNEL_IMAGE@@; then
+            fatload ${devtype} ${devnum}:${distro_bootpart} @@KERNEL_LOAD_ADDRESS@@ @@KERNEL_IMAGE@@;
+            setenv found_kernel 1;
+        fi;
+        
+        # 尝试加载设备树文件（优先 zynq-phosphor-7010.dtb，其次 system.dtb）
+        if test -e ${devtype} ${devnum}:${distro_bootpart} /zynq-phosphor-7010.dtb; then
+            fatload ${devtype} ${devnum}:${distro_bootpart} @@DEVICETREE_ADDRESS@@ zynq-phosphor-7010.dtb;
+            setenv found_dtb 1;
+        elif test -e ${devtype} ${devnum}:${distro_bootpart} /system.dtb; then
+            fatload ${devtype} ${devnum}:${distro_bootpart} @@DEVICETREE_ADDRESS@@ system.dtb;
+            setenv found_dtb 1;
+        fi;
+        
+        # 尝试加载 FPGA bitstream 文件
+        if test -e ${devtype} ${devnum}:${distro_bootpart} /system.bit; then
+            fatload ${devtype} ${devnum}:${distro_bootpart} 0x00800000 system.bit;
+            fpga loadb 0 ${fileaddr} ${filesize};
+            setenv found_bit 1;
+        fi;
+        
+        # 检查是否三个文件都已加载
+        if test ${found_kernel} = 1; then
+            if test ${found_dtb} = 1; then
+                if test ${found_bit} = 1; then
+                    @@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ - @@DEVICETREE_ADDRESS@@;
+                    exit;
+                else
+                    echo "Error: FPGA bitstream not found.";
+                fi;
+            else
+                echo "Error: Device tree not found.";
+            fi;
+        else
+            echo "Error: Kernel image not found.";
+        fi;
+    fi;
+done;
+
+
+# 如果前面的本地加载失败，尝试通过 TFTP 方式加载所需文件
+echo "Local boot failed, attempting TFTP boot...";
+
+setenv found_kernel 0;
+setenv found_dtb 0;
+setenv found_bit 0;
+
+
+
+if tftpboot @@KERNEL_LOAD_ADDRESS@@ @@KERNEL_IMAGE@@; then
+    echo "Kernel image loaded via TFTP.";
+	setenv found_kernel 1;
+else
+    echo "Error: TFTP load of kernel image failed.";
+    exit;
+fi;
+
+if tftpboot @@DEVICETREE_ADDRESS@@ system.dtb; then
+    echo "Device tree loaded via TFTP.";
+	setenv found_dtb 1;
+else
+    echo "Error: TFTP load of device tree failed.";
+    exit;
+fi;
+
+if tftpboot 0x00800000 system.bit; then
+    echo "FPGA bitstream loaded via TFTP.";
+    fpga loadb 0 ${fileaddr} ${filesize};
+	setenv found_bit 1;
+else
+    echo "Error: TFTP load of FPGA bitstream failed.";
+    exit;
+fi;
+
+
+# 检查是否三个文件都已加载
+if test ${found_kernel} = 1; then
+    if test ${found_dtb} = 1; then
+        if test ${found_bit} = 1; then
+			setenv bootargs "console=ttyPS0,115200 root=/dev/nfs rw nfsroot=172.16.202.3:/nfs/rootfs,nfsvers=3 ip=dhcp";
+            @@KERNEL_BOOTCMD@@ @@KERNEL_LOAD_ADDRESS@@ - @@DEVICETREE_ADDRESS@@;
+            exit;
+        else
+            echo "Error: FPGA bitstream not found.";
+        fi;
+    else
+        echo "Error: Device tree not found.";
+    fi;
+else
+    echo "Error: Kernel image not found.";
+fi;

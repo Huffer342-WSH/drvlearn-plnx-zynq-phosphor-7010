@@ -1,3 +1,2 @@
-/include/ "system-conf.dtsi"
-/ {
-};
+/* 添加到Linux内核代码中的设备树文件 */
+#include "zynq-phosphor-7010-user.dtsi"
